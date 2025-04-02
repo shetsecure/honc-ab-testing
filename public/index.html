@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Testing Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">A/B Testing Platform</h1>
+            <button id="newTestBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Create New Test
+            </button>
+        </header>
+
+        <!-- New Test Modal -->
+        <div id="newTestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg w-full max-w-md">
+                <h2 class="text-2xl font-bold mb-4">Create New Test</h2>
+                <form id="newTestForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Name</label>
+                        <input type="text" name="name" required class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea name="description" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Variation A</label>
+                        <textarea name="variationA" required class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Variation B</label>
+                        <textarea name="variationB" required class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400" onclick="closeModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Create Test
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tests List -->
+        <div id="testsList" class="space-y-4">
+            <!-- Tests will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Modal handling
+        const modal = document.getElementById('newTestModal');
+        const newTestBtn = document.getElementById('newTestBtn');
+        const newTestForm = document.getElementById('newTestForm');
+
+        newTestBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Handle form submission
+        newTestForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                description: formData.get('description'),
+                variationA: formData.get('variationA'),
+                variationB: formData.get('variationB')
+            };
+
+            try {
+                const response = await fetch('/tests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    e.target.reset();
+                    loadTests();
+                } else {
+                    alert('Error creating test');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating test');
+            }
+        });
+
+        // Load and display tests
+        async function loadTests() {
+            try {
+                const response = await fetch('/tests');
+                const tests = await response.json();
+                const testsList = document.getElementById('testsList');
+                
+                testsList.innerHTML = tests.map(test => `
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-bold mb-2">${test.name}</h2>
+                        ${test.description ? `<p class="text-gray-600 mb-4">${test.description}</p>` : ''}
+                        <div class="flex space-x-2">
+                            <a href="${test.embedUrl}" target="_blank" 
+                               class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                View Test
+                            </a>
+                            <a href="${test.analyticsUrl}" target="_blank"
+                               class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                                View Analytics
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Initial load
+        loadTests();
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html> 

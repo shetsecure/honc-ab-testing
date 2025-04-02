@@ -7,11 +7,20 @@
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
 		"test": "vitest",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"db:generate": "drizzle-kit generate:sqlite",
+		"db:migrate": "wrangler d1 migrations apply ab-test-db",
+		"db:setup": "pnpm db:generate && pnpm db:migrate"
+	},
+	"dependencies": {
+		"drizzle-orm": "^0.29.3",
+		"hono": "^4.0.5",
+		"nanoid": "^5.0.6"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.7.5",
 		"@cloudflare/workers-types": "^4.20250402.0",
+		"drizzle-kit": "^0.20.14",
 		"typescript": "^5.5.2",
 		"vitest": "~3.0.7",
 		"wrangler": "^4.6.0"

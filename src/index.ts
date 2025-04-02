@@ -160,13 +160,6 @@ app.get("/embed/:id", async (c) => {
 	const variation = Math.random() < 0.5 ? "A" : "B";
 	const content = variation === "A" ? test.variationA : test.variationB;
 
-	// Track the view
-	await db.insert(views).values({
-		id: nanoid(),
-		testId: test.id,
-		variation,
-	});
-
 	return c.html(`
 		<!DOCTYPE html>
 		<html>
@@ -210,11 +203,36 @@ app.get("/embed/:id/script.js", async (c) => {
 		return c.json({ error: "Test not found" }, 404);
 	}
 
+	// Check if the request is coming from an embedded context
+	const referer = c.req.header("Referer");
+	const origin = new URL(c.req.url).origin;
+	
+	// Don't track views if:
+	// 1. No referer
+	// 2. Referer is from our own domain
+	// 3. Referer includes our domain
+	if (!referer || referer.includes(origin)) {
+		return c.text(`
+(function() {
+  const container = document.createElement('div');
+  container.innerHTML = \`${Math.random() < 0.5 ? test.variationA : test.variationB}\`;
+  container.style.maxWidth = '800px';
+  container.style.margin = '0 auto';
+  container.style.padding = '2rem';
+  container.style.lineHeight = '1.5';
+  container.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+  
+  const target = document.currentScript.parentElement;
+  target.appendChild(container);
+})();
+`);
+	}
+
 	// Randomly choose variation A or B
 	const variation = Math.random() < 0.5 ? "A" : "B";
 	const content = variation === "A" ? test.variationA : test.variationB;
 
-	// Track the view
+	// Track the view only when embedded on external sites
 	await db.insert(views).values({
 		id: nanoid(),
 		testId: test.id,
@@ -340,10 +358,15 @@ app.get("/analytics/:id", async (c) => {
 
 						<div class="mt-8">
 							<h2 class="text-lg font-semibold mb-2">Embed Code</h2>
-							<pre class="bg-gray-100 p-4 rounded overflow-x-auto">
-								<code>${embedCode}</code>
-							</pre>
-							<p class="text-sm text-gray-600 mt-2">Copy this code and paste it into your website where you want the test to appear.</p>
+							<div class="relative">
+								<pre class="border rounded p-4 overflow-x-auto">
+									<code class="text-gray-800">${embedCode}</code>
+								</pre>
+								<button onclick="navigator.clipboard.writeText(\`${embedCode}\`)" class="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+									Copy
+								</button>
+							</div>
+							<p class="text-sm text-gray-600 mt-2">Click the copy button to copy the code to your clipboard, then paste it into your website where you want the test to appear.</p>
 						</div>
 					</div>
 				</div>

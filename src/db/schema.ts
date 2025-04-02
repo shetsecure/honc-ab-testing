@@ -16,10 +16,10 @@ export const tests = sqliteTable("tests", {
   variationB: text("variation_b").notNull(),
   createdAt: text("created_at")
     .notNull()
-    .default(sql`(CURRENT_TIMESTAMP)`),
+    .default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at")
     .notNull()
-    .default(sql`(CURRENT_TIMESTAMP)`),
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Schema for tracking views
@@ -31,11 +31,15 @@ export const views = sqliteTable("views", {
   variation: text("variation").notNull(), // "A" or "B"
   createdAt: text("created_at")
     .notNull()
-    .default(sql`(CURRENT_TIMESTAMP)`),
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Types for our database schema
-export type Test = typeof tests.$inferSelect;
+export type Test = typeof tests.$inferSelect & {
+  embedCode?: string;
+  embedUrl?: string;
+  analyticsUrl?: string;
+};
 export type NewTest = typeof tests.$inferInsert;
 export type View = typeof views.$inferSelect;
 export type NewView = typeof views.$inferInsert; 

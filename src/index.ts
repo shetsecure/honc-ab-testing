@@ -26,7 +26,42 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use("/*", cors());
 
 // Serve static files
-app.use("/", serveStatic({ root: "./", manifest: (c: { env: Bindings }) => c.env.ASSETS }));
+app.use("/", serveStatic({ root: "./public", manifest: (c: { env: Bindings }) => c.env.ASSETS }));
+
+// Image upload endpoint
+app.post("/upload", async (c) => {
+	const formData = await c.req.formData();
+	const file = formData.get("file");
+	
+	if (!file || !(file instanceof File)) {
+		return c.json({ error: "No file provided or invalid file type" }, 400);
+	}
+
+	const key = `images/${file.name}`;
+	await c.env.ab_test_images.put(key, file, {
+		httpMetadata: {
+			contentType: file.type,
+		},
+	});
+
+	return c.json({ url: `${new URL(c.req.url).origin}/images/${file.name}` });
+});
+
+// Image serving endpoint
+app.get("/images/:key", async (c) => {
+	const key = c.req.param("key");
+	const object = await c.env.ab_test_images.get(key);
+
+	if (!object) {
+		return c.json({ error: "Image not found" }, 404);
+	}
+
+	return c.body(object.body, {
+		headers: {
+			"Content-Type": object.httpMetadata?.contentType || "image/jpeg",
+		},
+	});
+});
 
 // Redirect root to index.html
 app.get("/", (c) => c.redirect("/index.html"));
@@ -209,9 +244,8 @@ app.get("/embed/:id/script.js", async (c) => {
 	
 	// Don't track views if:
 	// 1. No referer
-	// 2. Referer is from our own domain
-	// 3. Referer includes our domain
-	if (!referer || referer.includes(origin)) {
+	// 2. Referer is exactly our domain (to prevent tracking from analytics page)
+	if (!referer || referer === origin) {
 		return c.text(`
 (function() {
   const container = document.createElement('div');
@@ -222,10 +256,17 @@ app.get("/embed/:id/script.js", async (c) => {
   container.style.lineHeight = '1.5';
   container.style.fontFamily = 'system-ui, -apple-system, sans-serif';
   
-  const target = document.currentScript.parentElement;
-  target.appendChild(container);
+  const target = document.getElementById('ab-test-container');
+  if (target) {
+    target.appendChild(container);
+  }
 })();
-`);
+`, {
+			headers: {
+				"Content-Type": "application/javascript",
+				"Access-Control-Allow-Origin": "*",
+			},
+		});
 	}
 
 	// Randomly choose variation A or B
@@ -250,10 +291,17 @@ app.get("/embed/:id/script.js", async (c) => {
   container.style.lineHeight = '1.5';
   container.style.fontFamily = 'system-ui, -apple-system, sans-serif';
   
-  const target = document.currentScript.parentElement;
-  target.appendChild(container);
+  const target = document.getElementById('ab-test-container');
+  if (target) {
+    target.appendChild(container);
+  }
 })();
-`);
+`, {
+		headers: {
+			"Content-Type": "application/javascript",
+			"Access-Control-Allow-Origin": "*",
+		},
+	});
 });
 
 // Analytics endpoint

@@ -2,10 +2,11 @@ import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // Define the type for our environment bindings
-export type Bindings = {
+export interface Bindings {
   DB: D1Database;
-  ASSETS: KVNamespace;
-};
+  ASSETS: Fetcher;
+  ab_test_images: R2Bucket;
+}
 
 // Schema for A/B tests
 export const tests = sqliteTable("tests", {
@@ -16,10 +17,10 @@ export const tests = sqliteTable("tests", {
   variationB: text("variation_b").notNull(),
   createdAt: text("created_at")
     .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+    .default(sql`(CURRENT_TIMESTAMP)`),
   updatedAt: text("updated_at")
     .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // Schema for tracking views
@@ -31,7 +32,7 @@ export const views = sqliteTable("views", {
   variation: text("variation").notNull(), // "A" or "B"
   createdAt: text("created_at")
     .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // Types for our database schema

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goose Image Test Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-4">Welcome to Our Website</h1>
+            <p class="text-gray-600 mb-6">
+                This is a sample page where we're testing different goose images. 
+                The image below is part of an A/B test to determine which goose image performs better.
+            </p>
+            
+            <!-- A/B Test Container -->
+            <div class="my-8 p-4 border rounded">
+                <h2 class="text-lg font-semibold mb-4">Meet Our Goose</h2>
+                <div id="ab-test-container"></div>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold mb-4">About This Test</h2>
+                <p class="text-gray-600">
+                    We're testing two different goose images to see which one resonates better with our visitors. 
+                    The image you see is randomly selected from two variations.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- A/B Test Script -->
+    <script>
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://square-hall-9112.shetsecure.workers.dev/embed/1Z4e_vuzx3H1buapKft5i/script.js';
+            script.async = true;
+            document.head.appendChild(script);
+        })();
+    </script>
+</body>
+</html> 

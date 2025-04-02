@@ -54,4 +54,11 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+
+	"r2_buckets": [
+		{
+			"binding": "ab_test_images",
+			"bucket_name": "ab-test-images"
+		}
+	]
 }
